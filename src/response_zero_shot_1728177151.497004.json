@@ -1,0 +1,69 @@
+{
+  "strategy": "zero_shot",
+  "prompt_prefix": "CREATE TABLE artist (\n    artist_id INTEGER PRIMARY KEY,\n    name VARCHAR(50) NOT NULL,\n    genre VARCHAR(30)\n);\n\nCREATE TABLE album (\n    album_id INTEGER PRIMARY KEY,\n    title VARCHAR(50) NOT NULL,\n    artist_id INTEGER,\n    release_year INTEGER,\n    FOREIGN KEY (artist_id) REFERENCES artist (artist_id)\n);\n\nCREATE TABLE song (\n    song_id INTEGER PRIMARY KEY,\n    title VARCHAR(50) NOT NULL,\n    album_id INTEGER,\n    duration TIME,\n    FOREIGN KEY (album_id) REFERENCES album (album_id)\n);\n\nCREATE TABLE listener (\n    listener_id INTEGER PRIMARY KEY,\n    name VARCHAR(50) NOT NULL,\n    email VARCHAR(50) UNIQUE\n);\n\nCREATE TABLE playlist (\n    playlist_id INTEGER PRIMARY KEY,\n    title VARCHAR(50) NOT NULL,\n    listener_id INTEGER,\n    FOREIGN KEY (listener_id) REFERENCES listener (listener_id)\n);\n\nCREATE TABLE playlist_song (\n    playlist_id INTEGER,\n    song_id INTEGER,\n    FOREIGN KEY (playlist_id) REFERENCES playlist (playlist_id),\n    FOREIGN KEY (song_id) REFERENCES song (song_id)\n);\n Give me a sqlite select statement that answers the question. Only respond with sqlite syntax. If there is an error, do not explain it!",
+  "questionResults": [
+    {
+      "question": "What are the top 3 albums by duration?",
+      "sql": "SELECT album.title, SUM(song.duration) as total_duration \nFROM album \nJOIN song ON album.album_id = song.album_id \nGROUP BY album.album_id \nORDER BY total_duration DESC \nLIMIT 3;",
+      "queryRawResponse": "[('Blonde on Blonde', 11.0), ('Mirage', 10.0), ('Red', 9.0)]",
+      "friendlyResponse": "The top three longest albums are \"Blonde on Blonde\" with a duration of 11.0, followed by \"Mirage\" with a duration of 10.0, and then \"Red\" with a duration of 9.0.",
+      "error": "None"
+    },
+    {
+      "question": "Which artist has the most songs?",
+      "sql": "SELECT artist.name, COUNT(song.song_id) AS total_songs\nFROM song\nJOIN album ON song.album_id = album.album_id\nJOIN artist ON album.artist_id = artist.artist_id\nGROUP BY artist.artist_id\nORDER BY total_songs DESC\nLIMIT 1;",
+      "queryRawResponse": "[('Fleetwood Mac', 3)]",
+      "friendlyResponse": "The artist with the most songs is Fleetwood Mac, with a total of 3 songs.",
+      "error": "None"
+    },
+    {
+      "question": "Which playlists contain songs by Bob Dylan?",
+      "sql": "SELECT playlist.title\nFROM playlist\nJOIN playlist_song ON playlist.playlist_id = playlist_song.playlist_id\nJOIN song ON playlist_song.song_id = song.song_id\nJOIN album ON song.album_id = album.album_id\nJOIN artist ON album.artist_id = artist.artist_id\nWHERE artist.name = 'Bob Dylan';",
+      "queryRawResponse": "[('Throwback',), ('Throwback',)]",
+      "friendlyResponse": "The songs by Bob Dylan are included in the playlist named \"Throwback\".",
+      "error": "None"
+    },
+    {
+      "question": "Which albums were released before 1970?",
+      "sql": "SELECT * FROM album WHERE release_year < 1970;",
+      "queryRawResponse": "[(1, 'Blonde on Blonde', 1, 1966), (4, 'At Folsom Prison', 4, 1968)]",
+      "friendlyResponse": "The albums \"Blonde on Blonde\" was released in 1966 and \"At Folsom Prison\" was released in 1968. Both were released before 1970.",
+      "error": "None"
+    },
+    {
+      "question": "Which listeners have created the most playlists?",
+      "sql": "SELECT listener.name, COUNT(playlist.title) AS NumberOfPlaylists \nFROM listener \nLEFT JOIN playlist ON listener.listener_id = playlist.listener_id \nGROUP BY listener.name \nORDER BY NumberOfPlaylists DESC \nLIMIT 1;",
+      "queryRawResponse": "[('Shandi Haynie', 1)]",
+      "friendlyResponse": "The listener who has created the most playlists is Shandi Haynie, with a total of 1 playlist.",
+      "error": "None"
+    },
+    {
+      "question": "What are the songs in the 'Girly pop' playlist?",
+      "sql": "SELECT song.title \nFROM song \nJOIN playlist_song ON song.song_id = playlist_song.song_id \nJOIN playlist ON playlist_song.playlist_id = playlist.playlist_id \nWHERE playlist.title = 'Girly pop';",
+      "queryRawResponse": "[]",
+      "friendlyResponse": "It appears that the 'Girly pop' playlist is currently empty. There are no songs in it at the moment.",
+      "error": "None"
+    },
+    {
+      "question": "Which songs are longer than 5 minutes?",
+      "sql": "SELECT * FROM song WHERE duration > '00:05:00';",
+      "queryRawResponse": "[(1, 'Rainy Day Women #12 & 35', 1, '04:36'), (2, 'Visions of Johanna', 1, '07:33'), (3, 'All Too Well', 2, '05:29'), (4, 'State of Grace', 2, '04:55'), (5, 'Miss You', 3, '04:48'), (6, 'Beast of Burden', 3, '04:17'), (7, 'Folsom Prison Blues', 4, '02:48'), (8, 'Jackson', 4, '02:45'), (9, 'Book of Love', 5, '03:38'), (10, 'Thats Alright', 5, '03:11'), (11, 'Gypsy', 5, '04:28')]",
+      "friendlyResponse": "The songs that are longer than 5 minutes are \"Visions of Johanna\" with a duration of 7 minutes and 33 seconds and \"All Too Well\" with a duration of 5 minutes and 29 seconds.",
+      "error": "None"
+    },
+    {
+      "question": "Which artist has the most albums?",
+      "sql": "SELECT artist.name, COUNT(album.artist_id) AS album_count\nFROM artist\nJOIN album ON artist.artist_id = album.artist_id\nGROUP BY album.artist_id\nORDER BY album_count DESC\nLIMIT 1;",
+      "queryRawResponse": "[('Fleetwood Mac', 1)]",
+      "friendlyResponse": "The artist with the most albums, according to the information given, is Fleetwood Mac with 1 album.",
+      "error": "None"
+    },
+    {
+      "question": "Which song would you recommend for listener Halsey Curry?",
+      "sql": "The question does not provide enough information about the listener's preferences to recommend a song based on SQLite syntax. Also, there is no data or table in the given schema that records listener preferences, or links listeners to songs, genres, or artists that they like.",
+      "queryRawResponse": "",
+      "friendlyResponse": "",
+      "error": "near \"The\": syntax error"
+    }
+  ]
+}
